@@ -1,6 +1,16 @@
 const express = require('express')
+var morgan = require('morgan')
 const app = express()
-app.use(express.json())//Para acceder a los datos fácilmente, necesitamos la ayuda del json-parser de Express, que se usa con el comando 
+
+// Middleware para parsear JSON
+app.use(express.json());
+
+// Token personalizado para registrar el cuerpo de la solicitud
+morgan.token('body', (req) => JSON.stringify(req.body));
+
+// Configuración de morgan para usar el token personalizado
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms data_send :body'));
+
 let persons = [
     { 
       "id": 1,
@@ -23,6 +33,8 @@ let persons = [
       "number": "39-23-6423122"
     }
 ]
+
+
 app.get('/', (request, response) => {
     response.send('<h1>Hello World!</h1>')
   })
@@ -86,7 +98,11 @@ app.delete('/api/persons/:id', (request, response) => {
   })
 
 
-
+  const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+  }
+  
+  app.use(unknownEndpoint)
 const PORT = 3001
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
